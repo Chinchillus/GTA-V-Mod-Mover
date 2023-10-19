@@ -21,7 +21,8 @@ MODS_TO_EXCLUDE = set([
     "x64y.rpf", "x64z.rpf", "common.rpf", "GTA5.exe", "GTAVLanguageSelect.exe", "GTAVLauncher.exe",
     "bink2w64.dll", "d3dcompiler.dll", "d3dcsx.dll", "GFSDK_ShadowLib.win64.dll", "GFSDK_TXAA.win64.dll",
     "GFSDK_TXAA_AlphaResolve.win64.dll", "GPUPerfAPIDX11-x64.dll", "NvPmApi.Core.win64.dll", "version.txt",
-    "index.bin", "d3dcompiler_46.dll", "d3dcsx_46.dll", "PlayGTAV.exe", "uninstall.exe",
+    "index.bin", "d3dcompiler_46.dll", "d3dcsx_46.dll", "PlayGTAV.exe", "uninstall.exe", "commandline.txt",
+    "zlib1.dll", "toxmod.dll", "opusenc.dll", "opus.dll", "libcurl.dll", "fvad.dll",
 ])
 
 FOLDERS_TO_EXCLUDE = set(["ReadMe", "Redistributables", "update", "x64"])
@@ -29,7 +30,7 @@ FOLDERS_TO_EXCLUDE = set(["ReadMe", "Redistributables", "update", "x64"])
 # Translations
 translations = {
     "en": {
-        "title": "GTA V Mod Mover",
+        "title": "GTA V Mod Mover", 
         "source_folder": "Game Folder (or folder with mods):",
         "destination_folder": "Destination Folder:",
         "move_button": "Move Mods",
@@ -53,7 +54,7 @@ translations = {
     
     },
 }
-current_language = "en"  # Default language
+current_language = "pl"  # Default language
 
 
 def select_gta_v_directory():
