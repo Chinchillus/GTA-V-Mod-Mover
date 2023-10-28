@@ -3,16 +3,13 @@ import os
 import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-from tkinter import *
 from ttkthemes import ThemedStyle
 import threading
-from tqdm import tqdm
 import time
 
 app = tk.Tk()
-app.title("GTA V Mod Mover")
+app.title("CMM®")
 app.resizable(False, False)
-
 
 MODS_TO_EXCLUDE = set([
     "x64a.rpf", "x64b.rpf", "x64c.rpf", "x64d.rpf", "x64e.rpf", "x64f.rpf", "x64g.rpf", "x64h.rpf",
@@ -27,35 +24,29 @@ MODS_TO_EXCLUDE = set([
 
 FOLDERS_TO_EXCLUDE = set(["ReadMe", "Redistributables", "update", "x64"])
 
-# Translations
 translations = {
     "en": {
-        "title": "GTA V Mod Mover", 
-        "source_folder": "Game Folder (or folder with mods):",
+        "title": "CMM®",
+        "source_folder": "Folder with mods:",
         "destination_folder": "Destination Folder:",
         "move_button": "Move Mods",
-        "author": "Author: chinchill (Discord) please do not reupload, thank you",
         "success_message": "Mods have been moved.",
         "select_game_folder": "Select Game Folder",
         "select_destination_folder": "Select Destination Folder",
         "success": "Success!",
-    
     },
     "pl": {
-        "title": "Przenośnik módów GTA V",
-        "source_folder": "Folder gry (lub folder z modami):",
-        "destination_folder": "Folder do którego będą przenoszone mody:",
+        "title": "CMM®",
+        "source_folder": "Folder z modami:",
+        "destination_folder": "Folder docelowy:",
         "move_button": "Przenieś mody",
-        "author": "      Autor: chinchill (Discord) nie reuploadować, dziękuję",
         "success_message": "Mody zostały przeniesione.",
         "select_game_folder": "Wybierz folder z GTA V",
         "select_destination_folder": "Wybierz folder docelowy",
         "success": "Sukces!",
-    
     },
 }
 current_language = "pl"  # Default language
-
 
 def select_gta_v_directory():
     gta_v_directory = filedialog.askdirectory(title=translations[current_language]["select_game_folder"])
@@ -69,7 +60,7 @@ def select_destination_directory():
         destination_entry.delete(0, tk.END)
         destination_entry.insert(0, destination_directory)
 
-def move_mod(mod, src_directory, dst_directory, pbar):
+def move_mod(mod, src_directory, dst_directory, pbar, progress_label, current_file_label):
     src_path = os.path.join(src_directory, mod)
     dst_path = os.path.join(dst_directory, mod)
 
@@ -84,13 +75,25 @@ def move_mod(mod, src_directory, dst_directory, pbar):
 
     return True
 
-def move_mods(mods, src_directory, dst_directory, pbar):
-    for mod in mods:
-        if not move_mod(mod, src_directory, dst_directory, pbar):
+def move_mods(mods, src_directory, dst_directory, pbar, progress_label, current_file_label):
+    total_mods = len(mods)
+    current_file_label.config(text="")  # Set the initial text to an empty string
+
+    for i, mod in enumerate(mods):
+        current_progress = (i + 1) / total_mods * 100
+        progress_label.config(text=f"{current_progress:.2f}%")
+        file_name = f"{mod}"
+        current_file_label.config(text=file_name)
+
+        # Calculate the initial x position for the label to center it
+        label_x = (app.winfo_width() - current_file_label.winfo_reqwidth()) / 2
+        current_file_label.place(x=label_x, y=185)
+
+        if not move_mod(mod, src_directory, dst_directory, pbar, progress_label, current_file_label):
             return False
 
-        time.sleep(0.05)  # Introduce a 50ms delay between each move operation
-        pbar.set(pbar.get() + 1)  # Update the progress bar
+        time.sleep(0.05)
+        pbar.set(pbar.get() + 1)
 
     return True
 
@@ -107,12 +110,11 @@ def move_mods_async_handler():
 
     progress_var = tk.DoubleVar()
     progress_bar = ttk.Progressbar(app, mode="determinate", variable=progress_var, maximum=len(mods_to_move))
-    progress_bar.place(x=20, y=146, width=270, height=8)
+    progress_bar.place(x=20, y=170, width=270, height=8)
 
-    move_thread = threading.Thread(target=move_mods, args=(mods_to_move, gta_v_directory, destination_directory, progress_var))
+    move_thread = threading.Thread(target=move_mods, args=(mods_to_move, gta_v_directory, destination_directory, progress_var, progress_label, current_file_label))
     move_thread.start()
 
-    # Display the success message and stop the progress bar after moving is complete
     def show_success_message():
         move_thread.join()
 
@@ -123,6 +125,16 @@ def move_mods_async_handler():
 
     success_thread = threading.Thread(target=show_success_message)
     success_thread.start()
+
+def swap_directories():
+    gta_v_directory = gta_v_entry.get()
+    destination_directory = destination_entry.get()
+
+    # Swap the values between the two entry widgets
+    gta_v_entry.delete(0, tk.END)
+    gta_v_entry.insert(0, destination_directory)
+    destination_entry.delete(0, tk.END)
+    destination_entry.insert(0, gta_v_directory)
 
 def switch_to_english():
     global current_language
@@ -145,21 +157,18 @@ app.configure(bg="#2b2b2b")
 style = ThemedStyle(app)
 style.set_theme("equilux")
 
-app.geometry("310x200")
+app.geometry("310x215")
 
-# The create_transparent_label function
 def create_transparent_label(parent, x, y, text):
     label = tk.Label(parent, text=text, bg="#2b2b2b", fg="white")
     label.place(x=x, y=y)
     return label
 
-# English Button
 english_button = ttk.Button(app, text="EN", command=switch_to_english, width=3)
-english_button.place(x=275, y=158)
+english_button.place(x=275, y=190)
 
-# Polish Button
 polish_button = ttk.Button(app, text="PL", command=switch_to_polish, width=3)
-polish_button.place(x=5, y=158)
+polish_button.place(x=5, y=190)
 
 source_folder_label = create_transparent_label(app, 20, 5, translations[current_language]["source_folder"])
 destination_folder_label = create_transparent_label(app, 20, 60, translations[current_language]["destination_folder"])
@@ -175,15 +184,19 @@ select_destination_button = ttk.Button(app, text="...", command=select_destinati
 select_destination_button.place(x=270, y=79.4)
 
 move_mods_button = ttk.Button(app, text=translations[current_language]["move_button"], command=move_mods_async_handler)
-move_mods_button.place(x=100, y=110)
+move_mods_button.place(x=90, y=110)
+
+progress_label = create_transparent_label(app, 130, 145, f"0.00%")
+current_file_label = create_transparent_label(app, 70, 185, "")
+
+swap_directories_button = ttk.Button(app, text="sw", command=swap_directories, width=3)
+swap_directories_button.place(x=270, y=52)
 
 select_gta_v_button["padding"] = (3, -1)
 select_destination_button["padding"] = (3, -1)
 move_mods_button["padding"] = (20, 5)
 polish_button["padding"] = (1, -1)
 english_button["padding"] = (1, -1)
-
-author_label = tk.Label(app, text=translations[current_language]["author"], bg="#2b2b2b", fg="white", font=("Helvetica", 8))
-author_label.place(x=5, y=180) #162
+swap_directories_button["padding"] = (-1, -1)
 
 app.mainloop()
